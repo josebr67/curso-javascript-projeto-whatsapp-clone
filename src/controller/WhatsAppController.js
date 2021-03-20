@@ -2,16 +2,69 @@ import {Format} from './../util/Format';
 import {CameraController} from './CameraController';
 import {MicrophoneController} from './MicrophoneController';
 import {DocumentPreviewController} from './DocumentPreviewController';
+import {Firebase} from './../util/Firebase';
+import {User} from './../model/User'
 
 export class WhatsAppController {
   constructor() {
     console.log("Funcionando");
+    this._firebase = new Firebase();
+    this.initAuth();
     this.elementsPrototype();
     this.loadElements();
     this.initEvents();
+    
   }
 
-  
+  initAuth(){
+
+      this._firebase.initAuth()
+      .then(response =>{
+
+          this._user = new User(response.user.email);
+          this._user.on('datachange', data =>{
+
+              document.querySelector('title').innerHTML = data.name + ' - WhatsApp Clone';
+              
+              this.el.inputNamePanelEditProfile.innerHTML = data.name;
+              
+              if (data.photo){
+
+                  let photo = this.el.imgPanelEditProfile;
+                  photo.src = data.photo;
+                  photo.show();
+                  this.el.imgDefaultPanelEditProfile.hide();
+
+                  let photo2 = this.el.myPhoto.querySelector('img');
+                  photo2.src = data.photo;
+                  photo2.show();
+
+              }
+
+          })
+
+          this._user.name = response.user.displayName;
+          this._user.email = response.user.email;
+          this._user.photo = response.user.photoURL;
+
+          this._user.save().then(() =>{
+            this.el.appContent.css({
+              display: 'flex'
+            });
+          });
+
+          this.el.appContent.css({
+            display: 'flex'
+          });
+
+        //  let userRef = User.findByEmail(response.user.email); 
+
+      }).catch(err =>{
+
+          console.error(err)
+      });
+
+  }
 
   //lê os id dos elementos e gera os nomes em camelCase.
   loadElements() {
@@ -139,8 +192,13 @@ export class WhatsAppController {
     })
 
     this.el.btnSavePanelEditProfile.on('click', e =>{
+        this.el.btnSavePanelEditProfile.disabled = true;
+        this._user.name = this.el.inputNamePanelEditProfile.innerHTML;
+        this._user.save().then(() => {
+            this.el.btnSavePanelEditProfile.disabled = false;
+        });
 
-        console.log(this.el.inputNamePanelEditProfile.innerHTML);
+        
     })
 
     this.el.formPanelAddContact.on('submit', e =>{
