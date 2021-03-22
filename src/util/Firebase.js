@@ -2,6 +2,7 @@ const firebase = require('firebase/app').default;
 require('firebase/firestore');
 import "firebase/auth";
 import "firebase/firestore";
+import "firebase/storage";
 
 
 export class Firebase{

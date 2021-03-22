@@ -24,6 +24,9 @@ export class User extends Model{
     get photo() { return this._data.photo;}
     set photo(value) {this._data.photo = value;}
 
+    get chatId() { return this._data.chatId;}
+    set chatId(value) {this._data.chatId = value;}
+
     getById(id){
 
         return new Promise((s,f) =>{
@@ -50,11 +53,52 @@ export class User extends Model{
         return Firebase.db().collection('/users');
     }
 
+    static getContactsRef(id){
+
+       return  User.getRef()
+        .doc(id)
+        .collection('contacts')
+
+    }
+
     static findByEmail(email){
 
         return User.getRef().doc(email)
 
     }
+
+    addContact(contact){
+
+       return  User.getContactsRef(this.email)
+        .doc(btoa(contact.email))
+        .set(contact.toJSON());
+
+
+    }
+
+    getContacts(filter = ''){
+
+        return new Promise((s, f) =>{
+
+            User.getContactsRef(this.email).where('name', '>=',filter).onSnapshot(docs =>{
+
+              let contacts = [];
+
+                docs.forEach(doc => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    contacts.push(data);
+
+                })
+
+                this.trigger('contactschange',docs);
+
+                s(contacts);
+            })
+
+        })
+
+    } 
 
 
 }
